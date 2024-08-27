@@ -1,24 +1,36 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 import subprocess
 
 app = FastAPI()
 
-@app.get("/")
-async def read_root():
-    email_to_check = "test@gmail.com"
-    return {"Hello": run_holehe(email_to_check)}
+@app.get("/email1")
+async def read_root(q: str = Query(..., description="Email address to check")):
+    return {"result": run_holehe(q)}
 
 def run_holehe(email):
     try:
-        # Run the Holehe command as a subprocess
-        result = subprocess.run(['holehe', email], capture_output=True, text=True)
+        # Run the Holehe command with the correct flags
+        result = subprocess.run(['holehe', email, '--only-used', '--no-color'], capture_output=True, text=True)
         
-        # Print the output from Holehe
-        return result.stdout
+        if result.stdout:
+            # Split the output by lines
+            lines = result.stdout.splitlines()
+            
+            # Filter out lines that contain "Twitter:" or "1FHDM49QfZX6pJmhjLE5tB2K6CaTLMZpXZ"
+            filtered_lines = [
+                line for line in lines 
+                if "Twitter:" not in line and "1FHDM49QfZX6pJmhjLE5tB2K6CaTLMZpXZ" not in line and "megadose"
+            ]
+            
+            # Join the filtered lines back into a single string
+            cleaned_output = "\n".join(filtered_lines)
+            return cleaned_output
         
-        # Check if there were any errors
-        if result.stderr:
-            print("Errors:", result.stderr)
+        else:
+            return {"error": result.stderr}
     
     except Exception as e:
-        print(f"An error occurred: {e}")
+        return {"error": str(e)}
+    
+    
+
