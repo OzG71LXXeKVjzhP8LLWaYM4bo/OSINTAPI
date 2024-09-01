@@ -1,11 +1,22 @@
 from fastapi import FastAPI, Query
 import subprocess
+import requests
 
 app = FastAPI()
 
 @app.get("/email1")
 async def read_root(q: str = Query(..., description="Email address to check")):
     return {"result": run_holehe(q)}
+
+@app.get("/phone1")
+async def a(q: str = Query(..., description="Email address to check")):
+    return {"result": "a"}
+
+def run_phoneinfoga():
+    try:
+        r = requests.get("http://localhost:5000/api/v2/scanners", headers = {"content-type": "application/json"})
+    except Exception as e:
+        return {"error": str(e)}
 
 def run_holehe(email):
     try:
