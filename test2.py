@@ -1,10 +1,10 @@
 import requests
 
-def startscam():
+def startscan():
     # Set the URL to your specific endpoint
-    r = requests.get("https://www.vitaglow.fit/newscan")
+    r = requests.get("https://vitaglow.fit/newscan")
     print(r.json)
-    url = "https://www.vitaglow.fit/startscan"
+    url = "https://vitaglow.fit/startscan"
 
     # Define the scan parameters as JSON data
     data = {
@@ -27,4 +27,4 @@ def startscam():
         print(f"Failed to start scan: {response.status_code}")
         print(response.text)
 
-startscam()
+startscan()
