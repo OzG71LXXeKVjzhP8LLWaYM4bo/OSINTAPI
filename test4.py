@@ -1,6 +1,6 @@
 import requests
 import re
-import json
+from bs4 import BeautifulSoup
 
 def start_scan(scanname, scantarget, usecase="Passive", modulelist="", typelist=""):
     url = "https://vitaglow.fit/startscan"
@@ -11,16 +11,21 @@ def start_scan(scanname, scantarget, usecase="Passive", modulelist="", typelist=
         "modulelist": modulelist,
         "typelist": typelist
     }
-    response = requests.post(url, data=data)
-    print(response.json())
-    return response.text
+    r = requests.post(url, data=data)
+    print(r.text)
+    return r.text
 
 def extract_scan_id(response_text):
-    match = re.search(r'scanSummaryView\("(\d+)"\)', response_text)
-    print(match)
-    if match:
-        return match.group(1)
-    return None
+    # Use regex to extract the scan ID from sf.fetchData calls
+    scan_id_match = re.search(r"'id':\s*'([A-F0-9]+)'", response_text)
+    
+    if scan_id_match:
+        scan_id = scan_id_match.group(1)
+        print(f"Scan ID found: {scan_id}")
+        return scan_id
+    else:
+        print("Scan ID not found")
+        return None
 
 def get_scan_summary(scan_id):
     scan_summary_url = "https://vitaglow.fit/scansummary"
