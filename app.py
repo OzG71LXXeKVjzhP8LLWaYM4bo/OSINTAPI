@@ -71,7 +71,18 @@ SEND REQUEST LIKE THIS
   "typelist": ["type1", "type2"]
 }
 """
-    
+
+@app.route("/api/graph", methods=["POST"])
+def graph():
+    data = request.get_json()
+
+    if not data or 'target' not in data:
+        return jsonify({"error": "No target provided"}), 400
+
+    target = data['target']
+    # Add your summary logic here
+    return jsonify({"message": f"Summary for {target}"})
+ 
 @app.route("/api/scansummary", methods=["POST"])
 def scan_summary():
     data = request.get_json()
