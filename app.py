@@ -59,6 +59,19 @@ def start_scan():
     else:
         return jsonify({"message": "There was an error matching IDs"}), 500
     
+
+"""
+SEND REQUEST LIKE THIS
+
+{
+  "target": "example.com",
+  "scanname": "example_scan",
+  "usecase": "security_audit",
+  "modulelist": ["module1", "module2"],
+  "typelist": ["type1", "type2"]
+}
+"""
+    
 @app.route("/api/scansummary", methods=["POST"])
 def scan_summary():
     data = request.get_json()
