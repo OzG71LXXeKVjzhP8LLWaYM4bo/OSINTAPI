@@ -3,45 +3,57 @@ import requests
 
 app = Flask(__name__)
 
-@app.route('/api/ipdata', methods=['GET'])
-
+@app.route('/api/ipdata', methods=['POST'])
 def get_data():
-    ip_address = request.args.get('ip')
+    data = request.get_json()
 
-    if not ip_address:
+    if not data or 'ip' not in data:
         return jsonify({"error": "No IP address provided"}), 400
-    
+
+    ip_address = data['ip']
+
     url = f"https://freeipapi.com/api/json/{ip_address}"
     response = requests.get(url)
-    data = response.json()
+    api_data = response.json()
 
-    return jsonify(data)
+    return jsonify(api_data)
 
-@app.route("/api/startscan", methods = ["POST"])
-def start():
-    target = requests.args.get("")
+@app.route("/api/startscan", methods=["POST"])
+def start_scan():
+    data = request.get_json()
 
-    if not target:
+    if not data or 'target' not in data:
         return jsonify({"error": "No target provided"}), 400
-    
-@app.route("/api/scansummary", methods = ["POST"])
-def summary():
-    target = requests.args.get("")
 
-    if not target:
-        return jsonify({"error": "No IP address provided"}), 400
-    
-@app.route("/api/scaneventresults", methods = ["POST"])
-def eventresults():
-    target = requests.args.get("")
+    target = data['target']
+    # Add your scan logic here
+    return jsonify({"message": f"Started scan for {target}"})
 
-    if not target:
-        return jsonify({"error": "No IP address provided"}), 400
-    
-@app.route("/api/get", methods = ["GET"])
+@app.route("/api/scansummary", methods=["POST"])
+def scan_summary():
+    data = request.get_json()
+
+    if not data or 'target' not in data:
+        return jsonify({"error": "No target provided"}), 400
+
+    target = data['target']
+    # Add your summary logic here
+    return jsonify({"message": f"Summary for {target}"})
+
+@app.route("/api/scaneventresults", methods=["POST"])
+def scan_event_results():
+    data = request.get_json()
+
+    if not data or 'target' not in data:
+        return jsonify({"error": "No target provided"}), 400
+
+    target = data['target']
+    # Add your event results logic here
+    return jsonify({"message": f"Event results for {target}"})
+
+@app.route("/api/get", methods=["GET"])
 def home():
-    return jsonify({"success": "api is working"})
-    
+    return jsonify({"success": "API is working"})
 
 if __name__ == '__main__':
-    app.run(debug=True, host = "localhost", port=5002)
+    app.run(debug=True, host="localhost", port=5002)
