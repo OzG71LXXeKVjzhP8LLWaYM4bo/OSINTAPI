@@ -82,17 +82,6 @@ def graph():
     target = data['target']
     # Add your summary logic here
     return jsonify({"message": f"Summary for {target}"})
- 
-@app.route("/api/scansummary", methods=["POST"])
-def scan_summary():
-    data = request.get_json()
-
-    if not data or 'target' not in data:
-        return jsonify({"error": "No target provided"}), 400
-
-    target = data['target']
-    # Add your summary logic here
-    return jsonify({"message": f"Summary for {target}"})
 
 @app.route("/api/scaneventresults", methods=["POST"])
 def scan_event_results():
@@ -100,10 +89,37 @@ def scan_event_results():
 
     if not data or 'target' not in data:
         return jsonify({"error": "No target provided"}), 400
-
+    
     target = data['target']
-    # Add your event results logic here
-    return jsonify({"message": f"Event results for {target}"})
+    scan_summary_url = "https://vitaglow.fit/scansummary"
+    scan_summary_data = {
+        "id": target,
+        "by": "type"
+    }
+    response = requests.post(scan_summary_url, data=scan_summary_data)
+
+    stuff = response.json()
+
+    results = []
+
+    for a in stuff:
+        if a[-1] == "RUNNING":
+            pass
+        else:
+            results.append(a[0])
+
+    final = []
+
+    for name in results:
+        url = "https://vitaglow.fit/scaneventresults"
+        data = {
+            "id": target,
+            "eventType": name
+        }
+        r = requests.post(url, data = data)
+        final.append(r.json())
+    return jsonify({"Results": final})
+
 
 @app.route("/api/get", methods=["GET"])
 def home():
