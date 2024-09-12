@@ -14,8 +14,12 @@ def get_data():
     ip_address = data['ip']
 
     url = f"https://freeipapi.com/api/json/{ip_address}"
-    response = requests.get(url)
-    api_data = response.json()
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        api_data = response.json()
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": f"Failed to fetch IP data: {e}"}), 500
 
     return jsonify(api_data)
 
@@ -23,21 +27,17 @@ def get_data():
 def start_scan():
     data = request.get_json()
 
-    # Ensure required fields are provided
     if not data or 'target' not in data:
         return jsonify({"error": "No target provided"}), 400
 
     target = data['target']
-    scanname = data.get('scanname', 'default_scan')  # You can add default values as needed
+    scanname = data.get('scanname', 'default_scan')
     scantarget = target
     usecase = data.get('usecase', 'default_usecase')
     modulelist = data.get('modulelist', [])
     typelist = data.get('typelist', [])
 
-    # External scan URL
     url = "https://vitaglow.fit/startscan"
-    
-    # Prepare the payload for the external request
     payload = {
         "scanname": scanname,
         "scantarget": scantarget,
@@ -46,31 +46,18 @@ def start_scan():
         "typelist": typelist
     }
 
-    # Send POST request to the external service
-    headers = {'Content-Type': 'application/json'}
-    r = requests.post(url, json=payload, headers=headers)
+    try:
+        r = requests.post(url, json=payload, headers={'Content-Type': 'application/json'})
+        r.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": f"Failed to start scan: {e}"}), 500
 
-    # Try to extract scan ID from the response using regex
     scan_id_match = re.search(r"'id':\s*'([A-F0-9]+)'", r.text)
-
     if scan_id_match:
         scan_id = scan_id_match.group(1)
         return jsonify({"scanid": scan_id})
     else:
         return jsonify({"message": "There was an error matching IDs"}), 500
-    
-
-"""
-SEND REQUEST LIKE THIS
-
-{
-  "target": "example.com",
-  "scanname": "example_scan",
-  "usecase": "security_audit",
-  "modulelist": ["module1", "module2"],
-  "typelist": ["type1", "type2"]
-}
-"""
 
 @app.route("/api/graph", methods=["POST"])
 def graph():
@@ -89,37 +76,39 @@ def scan_event_results():
 
     if not data or 'target' not in data:
         return jsonify({"error": "No target provided"}), 400
-    
+
     target = data['target']
     scan_summary_url = "https://vitaglow.fit/scansummary"
     scan_summary_data = {
         "id": target,
         "by": "type"
     }
-    response = requests.post(scan_summary_url, data=scan_summary_data)
 
-    stuff = response.json()
+    try:
+        response = requests.post(scan_summary_url, json=scan_summary_data)
+        response.raise_for_status()
+        stuff = response.json()
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": f"Failed to get scan summary: {e}"}), 500
 
     results = []
 
     for a in stuff:
         if a[-1] == "RUNNING":
-            pass
+            continue
         else:
             results.append(a[0])
 
     final = []
-
     for name in results:
-        url = "https://vitaglow.fit/scaneventresults"
-        data = {
-            "id": target,
-            "eventType": name
-        }
-        r = requests.post(url, data = data)
-        final.append(r.json())
-    return jsonify({"Results": final})
+        try:
+            r = requests.post("https://vitaglow.fit/scaneventresults", json={"id": target, "eventType": name})
+            r.raise_for_status()
+            final.append(r.json())
+        except requests.exceptions.RequestException as e:
+            return jsonify({"error": f"Failed to fetch event results: {e}"}), 500
 
+    return jsonify({"Results": final})
 
 @app.route("/api/get", methods=["GET"])
 def home():
