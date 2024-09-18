@@ -115,4 +115,4 @@ def home():
     return jsonify({"success": "API is working"})
 
 if __name__ == '__main__':
-    app.run(debug=True, host="localhost", port=5002)
+    app.run()
